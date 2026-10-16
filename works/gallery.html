@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나원의 일상 기록</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wall: #F0DB4F;
+    --ink: #22303A;
+    --muted: #6B7780;
+    --print: #FFFFFF;
+    --accent: #2F5D62;
+    --line: #C9CFD3;
+    --error: #A33A2C;
+    --serif: "Nanum Pen Script", "Apple SD Gothic Neo", "Malgun Gothic", cursive;
+    --sans: "Nanum Pen Script", "Apple SD Gothic Neo", "Malgun Gothic", cursive;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--wall);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 22px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 56px 24px 80px; }
+
+  /* 헤더 뒤 하얀 편지지 */
+  header {
+    text-align: center;
+    position: relative;
+    isolation: isolate;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 40px 32px 34px;
+  }
+  header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-color: #FFFFFF;
+    background-image:
+      linear-gradient(to right, transparent 46px, #F2B8B5 46px, #F2B8B5 48px, transparent 48px),
+      repeating-linear-gradient(to bottom, transparent 0, transparent 33px, #D6E0EA 33px, #D6E0EA 34px);
+    background-position: 0 0, 0 18px;
+    border-radius: 4px;
+    box-shadow: 0 6px 16px -6px rgba(34, 48, 58, 0.35);
+    transform: rotate(-1.2deg);
+  }
+  header h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: calc(clamp(2.8rem, 6vw, 4.2rem) + 5px);
+    line-height: 1.15;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  header p { margin: 0; color: var(--muted); }
+  .count { font-family: var(--serif); }
+
+  /* 업로드 영역 */
+  .uploader {
+    margin: 36px 0 44px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 14px;
+    background: var(--print);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 6px 16px -6px rgba(34, 48, 58, 0.35);
+  }
+  .picker {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 14px 6px 6px;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    max-width: 260px;
+  }
+  .picker:hover { border-color: var(--accent); }
+  .picker:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .picker input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .thumb {
+    width: 44px; height: 44px; border-radius: 5px;
+    background: var(--wall) center / cover no-repeat;
+    display: grid; place-items: center;
+    color: var(--muted); font-size: 1.3rem; flex: none;
+    overflow: hidden;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .picker-label { overflow: hidden; text-overflow: ellipsis; }
+
+  .title-input, .date-input {
+    width: 100%;
+    font: inherit;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--print);
+    color: var(--ink);
+  }
+  .title-input:focus, .date-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+
+  .add-btn {
+    font: inherit;
+    padding: 12px 26px;
+    border: 0; border-radius: 8px;
+    background: var(--accent); color: #fff;
+    cursor: pointer;
+  }
+  .add-btn:hover { background: #244A4E; }
+  .add-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .message {
+    grid-column: 1 / -1;
+    margin: 0; font-size: 0.9rem; color: var(--error);
+  }
+  .message:empty { display: none; }
+
+  /* 갤러리: 한 줄에 3개 */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+  .card {
+    position: relative;
+    background: var(--print);
+    padding: 12px 12px 18px;
+    border-radius: 3px;
+    box-shadow: 0 6px 16px -6px rgba(34, 48, 58, 0.35);
+    animation: drop 0.35s ease-out;
+  }
+  @keyframes drop {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .card img {
+    display: block; width: 100%;
+    aspect-ratio: 4 / 3; object-fit: cover;
+    background: var(--wall);
+  }
+  .card h2 {
+    margin: 14px 4px 0;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.35rem;
+    line-height: 1.3;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+  .card time {
+    display: block;
+    margin: 2px 4px 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .delete {
+    position: absolute; top: 18px; right: 18px;
+    width: 32px; height: 32px;
+    border: 0; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--ink);
+    font-size: 1.15rem; line-height: 1;
+    cursor: pointer;
+    display: grid; place-items: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  }
+  .delete:hover { background: var(--error); color: #fff; }
+  .delete:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 72px 20px;
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    color: var(--muted);
+  }
+  .empty strong { display: block; font-family: var(--serif); font-size: 1.6rem; font-weight: 400; color: var(--ink); margin-bottom: 4px; }
+
+  /* 배경: 회전하는 아스키 지구본 (www 상징) */
+  .globe-bg {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .globe-bg pre {
+    margin: 0;
+    font-family: "Courier New", Courier, monospace;
+    line-height: 1;
+    color: #FFFFFF;
+    opacity: 1;
+    white-space: pre;
+    user-select: none;
+  }
+  .wrap { position: relative; z-index: 1; }
+
+  /* 작은 화면 대응 */
+  @media (max-width: 760px) {
+    .uploader { grid-template-columns: 1fr; }
+    .picker { max-width: none; }
+    .gallery { grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  }
+  @media (max-width: 460px) {
+    .gallery { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="globe-bg" aria-hidden="true"><pre id="globe"></pre></div>
+  <div class="wrap">
+    <header>
+      <h1>나원의 일상 기록</h1>
+      <p>내가 찍은 사진을 한 장씩 모아 두는 곳 · <span class="count" id="count">0장</span></p>
+    </header>
+
+    <section class="uploader" aria-label="사진 추가">
+      <label class="picker">
+        <input type="file" id="fileInput" accept="image/*">
+        <span class="thumb" id="thumb" aria-hidden="true">＋</span>
+        <span class="picker-label" id="pickerLabel">사진 고르기</span>
+      </label>
+      <input type="text" class="title-input" id="titleInput" placeholder="사진 제목을 입력하세요" maxlength="60" aria-label="사진 제목">
+      <input type="date" class="date-input" id="dateInput" aria-label="찍은 날짜">
+      <button type="button" class="add-btn" id="addBtn">추가</button>
+      <p class="message" id="message" role="alert"></p>
+    </section>
+
+    <main class="gallery" id="gallery"></main>
+  </div>
+
+<script>
+  const fileInput   = document.getElementById('fileInput');
+  const titleInput  = document.getElementById('titleInput');
+  const dateInput   = document.getElementById('dateInput');
+  const addBtn      = document.getElementById('addBtn');
+  const gallery     = document.getElementById('gallery');
+  const thumb       = document.getElementById('thumb');
+  const pickerLabel = document.getElementById('pickerLabel');
+  const message     = document.getElementById('message');
+  const countEl     = document.getElementById('count');
+
+  let selectedUrl = null;
+
+  // 사진을 고르면 미리보기 표시
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    selectedUrl = null;
+
+    if (!file) { resetPicker(); return; }
+    if (!file.type.startsWith('image/')) {
+      showMessage('이미지 파일만 추가할 수 있어요. 다른 파일을 골라 주세요.');
+      fileInput.value = '';
+      resetPicker();
+      return;
+    }
+    pickerLabel.textContent = '불러오는 중…';
+    try {
+      selectedUrl = await loadImage(file);
+    } catch (err) {
+      showMessage('이 사진은 브라우저에서 열 수 없는 형식이에요(예: 아이폰 HEIC). JPG나 PNG로 바꿔서 다시 골라 주세요.');
+      fileInput.value = '';
+      resetPicker();
+      return;
+    }
+    const preview = document.createElement('img');
+    preview.src = selectedUrl;
+    preview.alt = '';
+    thumb.replaceChildren(preview);
+    pickerLabel.textContent = file.name;
+    showMessage('');
+    titleInput.focus();
+  });
+
+  addBtn.addEventListener('click', addCard);
+  titleInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) addCard();
+  });
+
+  function addCard() {
+    const title = titleInput.value.trim();
+    if (!selectedUrl) { showMessage('먼저 [사진 고르기]로 사진을 선택하세요.'); return; }
+    if (!title)       { showMessage('사진 제목을 입력하세요.'); titleInput.focus(); return; }
+    const date = dateInput.value;
+    if (!date)        { showMessage('날짜를 입력하세요.'); dateInput.focus(); return; }
+
+    const card = document.createElement('article');
+    card.className = 'card';
+
+    const img = document.createElement('img');
+    img.src = selectedUrl;
+    img.alt = title;
+
+    const h2 = document.createElement('h2');
+    h2.textContent = title;   // textContent로 넣어 HTML 삽입 방지
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'delete';
+    del.setAttribute('aria-label', `"${title}" 삭제`);
+    del.textContent = '×';
+
+    del.addEventListener('click', () => {
+      card.remove();
+      render();
+    });
+
+    const time = document.createElement('time');
+    time.dateTime = date;
+    time.textContent = formatDate(date);
+
+    card.append(img, del, h2, time);
+    gallery.appendChild(card);  // 새 카드는 뒤에 차곡차곡
+
+    // 입력창 초기화 (URL은 카드가 쓰므로 해제하지 않음)
+    selectedUrl = null;
+    fileInput.value = '';
+    titleInput.value = '';
+    setToday();
+    resetPicker();
+    showMessage('');
+    render();
+  }
+
+  function resetPicker() {
+    thumb.replaceChildren('＋');
+    pickerLabel.textContent = '사진 고르기';
+  }
+
+  // 파일을 data URL로 읽고, 실제로 그려지는지 확인한 뒤 적당한 크기로 줄여서 돌려줌
+  function loadImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('read failed'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('decode failed'));
+        img.onload = () => {
+          const MAX = 1600;
+          const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.naturalWidth * scale);
+          canvas.height = Math.round(img.naturalHeight * scale);
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.9));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 날짜 입력란 기본값: 오늘
+  function setToday() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    dateInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  // 2026-10-13 → 2026. 10. 13.
+  function formatDate(value) {
+    const [y, m, d] = value.split('-');
+    return `${y}. ${Number(m)}. ${Number(d)}.`;
+  }
+
+  function showMessage(text) { message.textContent = text; }
+
+  // 사진 수 갱신 + 빈 화면 안내
+  function render() {
+    const cards = gallery.querySelectorAll('.card').length;
+    countEl.textContent = `${cards}장`;
+    const empty = gallery.querySelector('.empty');
+    if (cards === 0 && !empty) {
+      const box = document.createElement('div');
+      box.className = 'empty';
+      const strong = document.createElement('strong');
+      strong.textContent = '아직 사진이 없어요';
+      box.append(strong, '위에서 사진을 고르고 제목을 입력한 뒤 [추가]를 눌러 보세요.');
+      gallery.replaceChildren(box);
+    } else if (cards > 0 && empty) {
+      empty.remove();
+    }
+  }
+
+  // ===== 배경 아스키 지구본 =====
+  // 구 위의 경선은 ( ), 위선은 _, 교차점은 +, 테두리는 @, 바깥 별은 * 로 그림
+  const globeEl = document.getElementById('globe');
+  const ROWS = 41, COLS = 71;
+  const CHAR_ASPECT = 0.6;          // 고정폭 글자의 가로/세로 비율
+  const RADIUS = 19.5;              // 세로 글자 수 기준 반지름
+  const STEP = Math.PI / 6;         // 30도 간격으로 선 긋기
+  const TURN_MS = 24000;            // 한 바퀴(360도)에 걸리는 시간
+
+  const nearest = (v) => Math.abs(v - Math.round(v / STEP) * STEP);
+
+  function drawGlobe(theta) {
+    let out = '';
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const y = (r - (ROWS - 1) / 2) / RADIUS;
+        const x = (c - (COLS - 1) / 2) * CHAR_ASPECT / RADIUS;
+        const dist = Math.sqrt(x * x + y * y);
+
+        if (dist > 1) {
+          if (dist <= 1 + 1 / RADIUS) out += '@';
+          else out += ((r * 73 + c * 151) % 97 === 0) ? '*' : ' ';
+          continue;
+        }
+
+        const z = Math.sqrt(1 - dist * dist);   // 보이는 앞면만
+        const lat = Math.asin(-y);
+        const lon = Math.atan2(x, z) + theta;
+        const cosLat = Math.cos(lat);
+
+        const onParallel = nearest(lat) < (0.55 / RADIUS) / Math.max(cosLat, 0.3);
+        const onMeridian = nearest(lon) * cosLat < (0.55 * CHAR_ASPECT / RADIUS) / Math.max(z, 0.25)
+                           && Math.abs(lat) < Math.PI / 2 - 0.15;
+
+        if (onParallel && onMeridian) out += '+';
+        else if (onMeridian) out += x < 0 ? '(' : ')';
+        else if (onParallel) out += '_';
+        else out += ' ';
+      }
+      out += '\n';
+    }
+    globeEl.textContent = out;
+  }
+
+  // 화면 크기에 맞춰 글자 크기 조절
+  function fitGlobe() {
+    const byHeight = window.innerHeight * 0.92 / ROWS;
+    const byWidth  = window.innerWidth  * 0.96 / (COLS * CHAR_ASPECT);
+    globeEl.style.fontSize = Math.min(byHeight, byWidth) + 'px';
+  }
+  window.addEventListener('resize', fitGlobe);
+  fitGlobe();
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    drawGlobe(0.4);   // 움직임 줄이기 설정이면 멈춘 상태로
+  } else {
+    let lastStep = -1;
+    const tick = (now) => {
+      const step = Math.floor(now / 50);          // 초당 약 20프레임
+      if (step !== lastStep) {
+        lastStep = step;
+        drawGlobe((now % TURN_MS) / TURN_MS * Math.PI * 2);
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  setToday();
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>document.documentElement.classList.add("js")</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>적극행정 신호등 | 대표 프로젝트</title>
+<meta name="description" content="민원 안내 전 3가지를 점검하면, 지금 안내해도 되는지 큰 신호등과 다음 행동으로 한눈에 보여주는 신입 주무관용 웹앱">
+<meta property="og:title" content="적극행정 신호등 | 대표 프로젝트">
+<meta property="og:description" content="민원 안내 전 3초 점검 — 신입 주무관을 위한 적극행정 신호등">
+<meta property="og:image" content="../images/og.jpg">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="#home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      적극행정 신호등
+    </a>
+    <nav class="site-nav" aria-label="앱 메뉴">
+      <a href="index.html">소개</a>
+      <a href="#home" data-nav="home">홈</a>
+      <a href="#write" data-nav="write" data-new>새 기록</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container app-main">
+
+  <!-- ① 홈 -->
+  <section class="screen" data-screen="home" aria-labelledby="home-title">
+    <div class="home-hero">
+      <p class="eyebrow">신입 주무관을 위한 안내 전 점검</p>
+      <h1 id="home-title">안내하기 전,<br>3가지만 확인해요</h1>
+      <p class="lead">민원 상황을 적고 3가지를 점검하면, 지금 안내해도 되는지 신호등으로 바로 알려 드려요.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#write" data-new>새 기록 시작하기</a>
+      </div>
+    </div>
+
+    <section class="block" aria-labelledby="types-title">
+      <div class="block-head">
+        <h2 id="types-title">민원 유형</h2>
+        <p class="block-sub">유형을 누르면 바로 기록을 시작해요.</p>
+      </div>
+      <div class="type-grid" id="type-list">
+        <!-- 2단계에서 샘플 데이터로 채워져요 -->
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="records-title">
+      <div class="block-head">
+        <h2 id="records-title">점검 기록</h2>
+        <p class="block-sub">최근 점검한 순서대로 보여요. 누르면 결과를 다시 볼 수 있어요.</p>
+      </div>
+      <p class="toast" id="save-toast" role="status" hidden></p>
+      <ul class="record-list" id="record-list"></ul>
+      <p class="empty" id="record-empty">아직 점검 기록이 없어요. 위에서 민원 유형을 골라 첫 기록을 시작해 보세요.</p>
+    </section>
+  </section>
+
+  <!-- ② 기록 작성 -->
+  <section class="screen" data-screen="write" aria-labelledby="write-title" hidden>
+    <div class="screen-head">
+      <p class="step-label">1 / 3 · 민원 상황 기록</p>
+      <h2 id="write-title">어떤 민원인가요?</h2>
+    </div>
+
+    <form class="card form-card" id="write-form" novalidate>
+      <div class="form-row">
+        <div class="field">
+          <label for="f-date">날짜 <span class="req">필수</span></label>
+          <input class="input" type="date" id="f-date" name="date" required>
+        </div>
+        <div class="field">
+          <label for="f-type">민원 유형 <span class="req">필수</span></label>
+          <select class="select" id="f-type" name="type" required>
+            <option value="">유형을 골라 주세요</option>
+          </select>
+        </div>
+      </div>
+
+      <fieldset class="person">
+        <legend>민원인 정보 <span class="opt">선택</span></legend>
+        <p class="warn" role="note"><strong>⚠️ 연습용이에요.</strong> 실제 이름·연락처·주소를 입력하지 마세요.</p>
+        <div class="form-row three">
+          <div class="field">
+            <label for="f-name">이름</label>
+            <input class="input" type="text" id="f-name" name="name" placeholder="예) 홍길동" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="f-phone">연락처</label>
+            <input class="input" type="tel" id="f-phone" name="phone" placeholder="예) 010-0000-0000" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="f-address">집 주소</label>
+            <input class="input" type="text" id="f-address" name="address" placeholder="예) ○○시 ○○동" autocomplete="off">
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <label for="f-content">민원 내용 <span class="req">필수</span></label>
+        <textarea class="textarea" id="f-content" name="content" placeholder="예) 이사 온 지 2주 됐는데 전입신고 때 세대주 확인 서류가 무엇이 필요한지 물어보심"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="f-law">관련 법령 이름</label>
+          <input class="input" type="text" id="f-law" name="lawName" placeholder="예) 주민등록법">
+        </div>
+        <div class="field">
+          <label for="f-law-url">관련 법령 링크</label>
+          <input class="input" type="url" id="f-law-url" name="lawUrl" placeholder="https://www.law.go.kr/...">
+          <span class="hint"><a href="https://www.law.go.kr" target="_blank" rel="noopener">국가법령정보센터</a>에서 찾아 주소를 붙여 넣어요.</span>
+        </div>
+      </div>
+
+      <p class="form-error" id="write-error" role="alert" hidden></p>
+
+      <div class="form-actions">
+        <a class="btn btn-secondary" href="#home">취소</a>
+        <button class="btn btn-primary" type="submit">점검하기 →</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ③ 자가 점검 -->
+  <section class="screen" data-screen="check" aria-labelledby="check-title" hidden>
+    <div class="screen-head">
+      <p class="step-label">2 / 3 · 자가 점검</p>
+      <h2 id="check-title">안내 전에 확인해요</h2>
+    </div>
+
+    <form class="check-list" id="check-form">
+      <fieldset class="card check-item">
+        <legend><span class="q-num">Q1</span> 근거가 되는 규정이나 안내문이 있나요?</legend>
+        <div class="yn">
+          <label><input type="radio" name="q1" value="yes"><span>예</span></label>
+          <label><input type="radio" name="q1" value="no"><span>아니오</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="card check-item">
+        <legend><span class="q-num">Q2</span> 그 자료가 최신인지(시행일·수정일) 확인했나요?</legend>
+        <div class="yn">
+          <label><input type="radio" name="q2" value="yes"><span>예</span></label>
+          <label><input type="radio" name="q2" value="no"><span>아니오</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="card check-item">
+        <legend><span class="q-num">Q3</span> 비슷하게 처리한 선례가 있거나 선배에게 확인했나요?</legend>
+        <div class="yn">
+          <label><input type="radio" name="q3" value="yes"><span>예</span></label>
+          <label><input type="radio" name="q3" value="no"><span>아니오</span></label>
+        </div>
+      </fieldset>
+
+      <p class="check-status" id="check-status" aria-live="polite">0 / 3 답했어요</p>
+
+      <div class="form-actions">
+        <a class="btn btn-secondary" href="#write">← 기록 고치기</a>
+        <button class="btn btn-primary" type="submit" id="check-submit" disabled>결과 보기 →</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ④ 신호등 결과 -->
+  <section class="screen" data-screen="result" aria-labelledby="result-title" hidden>
+    <div class="screen-head">
+      <p class="step-label" id="result-label">3 / 3 · 점검 결과</p>
+    </div>
+
+    <div class="signal-panel" id="signal-panel" data-signal="green">
+      <div class="lights" aria-hidden="true">
+        <span class="light red"></span>
+        <span class="light yellow"></span>
+        <span class="light green"></span>
+      </div>
+      <div class="signal-text">
+        <p class="signal-badge" id="signal-badge">초록불</p>
+        <h2 id="result-title">바로 안내해도 좋아요</h2>
+        <p id="signal-desc">근거·최신 여부·선례를 모두 확인했어요. 자신 있게 안내하세요.</p>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <section class="card result-card" aria-labelledby="next-title">
+        <h3 id="next-title">다음 행동</h3>
+        <ul class="next-list" id="next-list"></ul>
+      </section>
+      <section class="card result-card" aria-labelledby="summary-title">
+        <h3 id="summary-title">기록 요약</h3>
+        <dl class="summary" id="summary"></dl>
+      </section>
+    </div>
+
+    <p class="disclaimer">이 신호등은 스스로 점검을 돕는 안내이며, 법적 판단이 아니에요.</p>
+
+    <p class="form-error" id="save-error" role="alert" hidden></p>
+
+    <div class="form-actions">
+      <a class="btn btn-secondary" href="#check" id="recheck-link">← 다시 점검</a>
+      <button class="btn btn-primary" type="button" id="save-btn">기록 저장하기</button>
+      <a class="btn btn-secondary" href="#home" id="back-home" hidden>← 목록으로</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <span>적극행정 신호등 · 대표 프로젝트 · 2026</span>
+    <span>Made with Claude Code</span>
+  </div>
+</footer>
+
+<script src="sample-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

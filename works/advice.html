@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <script>document.documentElement.classList.add("js")</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>오늘의 조언 | 나원 포트폴리오</title>
+  <meta name="description" content="무료 API에서 조언 한 줄을 받아 오고 기록을 남기는 위젯">
+  <meta property="og:title" content="오늘의 조언 | 나원 포트폴리오">
+  <meta property="og:description" content="무료 API에서 조언 한 줄을 받아 오고 기록을 남기는 위젯">
+  <meta property="og:image" content="../images/profile.jpg">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="../css/pages.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="../index.html">나원<span>.</span></a>
+      <nav aria-label="주 메뉴">
+        <button class="menu-btn" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="nav-list">☰</button>
+        <ul class="nav-list" id="nav-list">
+          <li><a href="../index.html">소개</a></li>
+          <li><a href="../works.html" aria-current="page">작품</a></li>
+          <li><a href="../contact.html">연락처</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <p class="eyebrow reveal"><a href="../works.html" style="text-decoration:none">← 작품 목록</a></p>
+      <h1 class="section-title reveal">오늘의 조언</h1>
+      <p class="lead reveal" style="margin-bottom: var(--s4)">
+        버튼을 누르면 무료 API(Advice Slip)에서 영어 조언 한 줄을 받아 와요.
+        받은 조언은 이 브라우저에 최근 10개까지 기록돼요.
+      </p>
+
+      <section class="advice-widget reveal" data-advice data-limit="10" aria-label="조언 받기">
+        <p class="advice-text is-empty" data-advice-text aria-live="polite">버튼을 눌러 오늘의 조언을 받아 보세요.</p>
+        <div class="advice-actions">
+          <button class="btn btn-primary" type="button" data-advice-btn>새 조언 받기</button>
+          <button class="btn btn-outline" type="button" data-advice-clear>기록 지우기</button>
+        </div>
+        <p class="advice-msg" data-advice-msg role="status"></p>
+        <h2 class="advice-history-title">받은 조언 기록</h2>
+        <ol class="advice-history" data-advice-history></ol>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>© 2026 나원 · <span class="placeholder">[여기에 입력: 이메일]</span></span>
+      <span>Made with Claude Code</span>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script src="../js/advice.js"></script>
+</body>
+</html>

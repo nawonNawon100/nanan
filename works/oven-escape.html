@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>말랑빵의 오븐 탈출</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       1. 기본 화면 설정
+       ============================================ */
+    :root {
+      --cream: #FFF4DF;
+      --crust: #D9893A;
+      --ink: #4A2617;
+      --hot: #FF5A36;
+      --glass: rgba(255, 244, 223, 0.22);
+      box-sizing: border-box;
+    }
+    * { box-sizing: inherit; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #2B140C;
+      font-family: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      color: var(--ink);
+      /* 게임 중 화면이 끌리거나 글자가 선택되지 않게 */
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* ============================================
+       2. 상단 HUD (하트, 진행도, 점수)
+       ============================================ */
+    .hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: calc(env(safe-area-inset-top, 0px) + 12px)
+               calc(env(safe-area-inset-right, 0px) + 16px) 0
+               calc(env(safe-area-inset-left, 0px) + 16px);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      pointer-events: none;
+      color: var(--cream);
+      font-size: 22px;
+      text-shadow: 0 2px 0 rgba(74, 38, 23, 0.6);
+    }
+    .hearts { letter-spacing: 2px; min-width: 84px; }
+    .progress {
+      flex: 1;
+      height: 16px;
+      max-width: 420px;
+      margin: 0 auto;
+      background: rgba(43, 20, 12, 0.45);
+      border: 2px solid rgba(255, 244, 223, 0.6);
+      border-radius: 999px;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #FFD36E, #FF9A4D);
+    }
+    .progress-bun, .progress-door {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      line-height: 1;
+    }
+    .progress-door { left: 100%; }
+    .score { min-width: 84px; text-align: right; }
+
+    /* ============================================
+       3. 점프 / 슬라이드 버튼
+       ============================================ */
+    .ctrl {
+      position: fixed;
+      bottom: 0;
+      width: 96px;
+      height: 96px;
+      margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+      border-radius: 50%;
+      border: 4px solid rgba(255, 244, 223, 0.85);
+      background: var(--glass);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      color: var(--cream);
+      font-family: inherit;
+      font-size: 17px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      touch-action: none;
+      transition: transform 0.08s, background-color 0.08s;
+      text-shadow: 0 2px 0 rgba(74, 38, 23, 0.55);
+    }
+    .ctrl svg { width: 34px; height: 34px; }
+    .ctrl.pressed { transform: scale(0.9); background: rgba(255, 244, 223, 0.45); }
+    .ctrl:focus-visible { outline: 4px solid #FFD36E; outline-offset: 4px; }
+    #jumpBtn  { left: 0;  margin-left:  calc(env(safe-area-inset-left, 0px) + 22px); }
+    #slideBtn { right: 0; margin-right: calc(env(safe-area-inset-right, 0px) + 22px); }
+
+    /* ============================================
+       4. 시작 / 끝 화면
+       ============================================ */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(43, 20, 12, 0.55);
+      z-index: 10;
+    }
+    .screen[hidden] { display: none; }
+    .card {
+      width: min(380px, 100%);
+      background: var(--cream);
+      border-radius: 28px;
+      padding: 26px 24px 24px;
+      text-align: center;
+      box-shadow: 0 10px 0 var(--crust), 0 24px 40px rgba(0, 0, 0, 0.35);
+    }
+    .card h1 { margin: 0 0 4px; font-size: 32px; font-weight: normal; line-height: 1.2; }
+    .card .sub { margin: 0 0 12px; font-size: 17px; color: #8A5634; }
+    .card canvas { position: static; width: 120px; height: 120px; margin: 0 auto 6px; }
+    .howto {
+      text-align: left;
+      font-size: 16px;
+      line-height: 1.7;
+      background: #FFE8C2;
+      border-radius: 16px;
+      padding: 10px 14px;
+      margin: 0 0 18px;
+      list-style: none;
+    }
+    .big-btn {
+      font-family: inherit;
+      font-size: 24px;
+      width: 100%;
+      padding: 14px;
+      border: 0;
+      border-radius: 18px;
+      background: var(--hot);
+      color: #FFF;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #B83A1E;
+      transition: transform 0.08s, box-shadow 0.08s;
+    }
+    .big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #B83A1E; }
+    .big-btn:focus-visible { outline: 4px solid #FFD36E; outline-offset: 4px; }
+    .result { font-size: 20px; margin: 4px 0 18px; }
+    .result strong { font-size: 40px; display: block; color: var(--hot); font-weight: normal; }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- 상단 정보 -->
+  <div class="hud" aria-hidden="true">
+    <div class="hearts" id="hearts">❤️❤️❤️</div>
+    <div class="progress">
+      <div class="progress-fill" id="progressFill"></div>
+      <span class="progress-bun" id="progressBun">🍞</span>
+      <span class="progress-door">🚪</span>
+    </div>
+    <div class="score" id="score">0점</div>
+  </div>
+
+  <!-- 조작 버튼 -->
+  <button class="ctrl" id="jumpBtn" aria-label="점프">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    점프
+  </button>
+  <button class="ctrl" id="slideBtn" aria-label="슬라이드">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17h16M14 11l6 6-6 6" transform="translate(0,-4)"/></svg>
+    슬라이드
+  </button>
+
+  <!-- 시작 화면 -->
+  <div class="screen" id="startScreen">
+    <div class="card">
+      <canvas id="preview" width="240" height="240"></canvas>
+      <h1>말랑빵의 오븐 탈출</h1>
+      <p class="sub">뜨거운 오븐에서 무사히 빠져나가자!</p>
+      <ul class="howto">
+        <li>⬆️ <b>점프</b>: 불꽃과 프라이팬을 뛰어넘어요 (공중에서 한 번 더!)</li>
+        <li>➡️ <b>슬라이드</b>: 꾹 누르고 있으면 밀대 밑으로 쏙</li>
+        <li>⭐ 설탕별을 모으면 점수가 올라가요</li>
+        <li>⌨️ 키보드: 스페이스·↑ 점프 / ↓ 슬라이드</li>
+      </ul>
+      <button class="big-btn" id="startBtn">시작!</button>
+    </div>
+  </div>
+
+  <!-- 끝 화면 -->
+  <div class="screen" id="endScreen" hidden>
+    <div class="card">
+      <h1 id="endTitle">오븐 탈출 성공!</h1>
+      <p class="sub" id="endSub">말랑빵이 무사히 빠져나왔어요</p>
+      <p class="result"><strong id="endScore">0</strong>점</p>
+      <button class="big-btn" id="retryBtn">다시 하기</button>
+    </div>
+  </div>
+
+  <script>
+  // =====================================================
+  // 0. 기본 준비
+  // =====================================================
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+
+  let W = 0, H = 0, dpr = 1;
+  let scale = 1;        // 화면 크기에 맞춰 게임 전체를 키우고 줄이는 비율
+  let VW = 0, VH = 0;   // '게임 단위'로 본 화면 크기
+  let groundY = 0;      // 바닥 높이
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    scale = Math.min(H / 600, W / 520);
+    VW = W / scale;
+    VH = H / scale;
+    groundY = Math.min(VH * 0.72, VH - 150);
+    if (player) player.x = VW * 0.5;   // 캐릭터는 항상 화면 가운데
+  }
+
+  // =====================================================
+  // 1. 스프라이트 시트 만들기
+  //    그림 파일 대신, 코드로 캐릭터 동작을 한 장씩 그려서
+  //    가로로 이어 붙인 '스프라이트 시트'를 만들어요.
+  // =====================================================
+  const FW = 120, FH = 120, SPR = 2;  // 한 칸 크기, 선명도 배율
+  const FRAMES = ["run0","run1","run2","run3","run4","run5","jump","fall","slide0","slide1","hurt"];
+  const sheet = document.createElement("canvas");
+  sheet.width = FW * SPR * FRAMES.length;
+  sheet.height = FH * SPR;
+
+  function drawBun(g, p) {
+    const cx = 60;
+    const { bodyY, rx, ry } = p;
+    const legColor = "#8A4B22";
+
+    // --- 다리 ---
+    g.lineCap = "round";
+    g.lineWidth = 9;
+    const hipY = bodyY + ry - (p.slide ? 6 : 8);
+    const legs = p.slide
+      ? [[46, p.legA], [58, p.legB]]
+      : [[52, p.legB], [68, p.legA]];
+    legs.forEach(([hx, a], i) => {
+      g.strokeStyle = i === 0 ? "#6E3A18" : legColor;
+      g.beginPath();
+      g.moveTo(hx, hipY);
+      if (p.slide) g.lineTo(hx + 22, hipY + 2);
+      else g.lineTo(hx + Math.sin(a) * 20, hipY + Math.cos(a) * 20);
+      g.stroke();
+    });
+
+    // --- 뒤쪽 팔 ---
+    g.lineWidth = 7;
+    g.strokeStyle = "#D99A4A";
+    drawArm(g, p, -1, cx, bodyY);
+
+    // --- 몸통 (빵) ---
+    const grad = g.createRadialGradient(cx - rx * 0.3, bodyY - ry * 0.2, 4, cx, bodyY, rx * 1.1);
+    grad.addColorStop(0, "#FFE7B0");
+    grad.addColorStop(1, "#F2B860");
+    g.fillStyle = grad;
+    g.beginPath();
+    g.ellipse(cx, bodyY, rx, ry, 0, 0, Math.PI * 2);
+    g.fill();
+
+    // 윗부분 노릇한 껍질
+    g.save();
+    g.beginPath();
+    g.ellipse(cx, bodyY, rx, ry, 0, 0, Math.PI * 2);
+    g.clip();
+    g.fillStyle = "#D9893A";
+    g.beginPath();
+    g.ellipse(cx, bodyY - ry * 0.75, rx * 1.15, ry * 0.62, 0, 0, Math.PI * 2);
+    g.fill();
+    // 빵 칼집
+    g.strokeStyle = "#F6C277";
+    g.lineWidth = 3;
+    for (let i = -1; i <= 1; i++) {
+      g.beginPath();
+      g.moveTo(cx + i * rx * 0.42 - 6, bodyY - ry * 0.62);
+      g.quadraticCurveTo(cx + i * rx * 0.42, bodyY - ry * 0.8, cx + i * rx * 0.42 + 6, bodyY - ry * 0.62);
+      g.stroke();
+    }
+    g.restore();
+
+    // 반짝 하이라이트
+    g.fillStyle = "rgba(255,255,255,0.55)";
+    g.beginPath();
+    g.ellipse(cx - rx * 0.45, bodyY - ry * 0.55, rx * 0.16, ry * 0.1, -0.5, 0, Math.PI * 2);
+    g.fill();
+
+    // --- 얼굴 (오른쪽을 보고 달려요) ---
+    const ey = bodyY + (p.slide ? -2 : 4);
+    const ex1 = p.slide ? 80 : 70, ex2 = p.slide ? 94 : 85;
+    g.fillStyle = "#3A1E10";
+    g.strokeStyle = "#3A1E10";
+    g.lineWidth = 3;
+    if (p.face === "happy") {
+      [ex1, ex2].forEach(x => {
+        g.beginPath();
+        g.arc(x, ey + 2, 4.5, Math.PI * 1.1, Math.PI * 1.9);
+        g.stroke();
+      });
+    } else if (p.face === "hurt") {
+      [ex1, ex2].forEach(x => {
+        g.beginPath();
+        g.moveTo(x - 4, ey - 4); g.lineTo(x + 4, ey + 4);
+        g.moveTo(x + 4, ey - 4); g.lineTo(x - 4, ey + 4);
+        g.stroke();
+      });
+    } else {
+      [ex1, ex2].forEach(x => {
+        g.beginPath();
+        g.ellipse(x, ey, 4, 5.5, 0, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = "#FFF";
+        g.beginPath();
+        g.arc(x + 1.4, ey - 2, 1.6, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = "#3A1E10";
+      });
+    }
+    // 볼터치
+    g.fillStyle = "rgba(255,120,120,0.55)";
+    g.beginPath(); g.ellipse(ex1 - 7, ey + 9, 5, 3, 0, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(ex2 + 6, ey + 9, 4, 3, 0, 0, Math.PI * 2); g.fill();
+    // 입
+    g.strokeStyle = "#3A1E10";
+    g.lineWidth = 2.5;
+    g.beginPath();
+    if (p.face === "hurt") {
+      g.ellipse((ex1 + ex2) / 2, ey + 12, 3, 3.5, 0, 0, Math.PI * 2);
+      g.stroke();
+    } else {
+      g.arc((ex1 + ex2) / 2, ey + 8, 4, 0.15 * Math.PI, 0.85 * Math.PI);
+      g.stroke();
+    }
+
+    // --- 앞쪽 팔 ---
+    g.lineWidth = 7;
+    g.strokeStyle = "#E8AA55";
+    drawArm(g, p, 1, cx, bodyY);
+
+    // --- 요리사 모자 ---
+    g.save();
+    const hatX = p.slide ? 40 : 58;
+    const hatY = bodyY - ry - (p.slide ? 2 : 4);
+    g.translate(hatX, hatY);
+    g.rotate(p.slide ? -0.7 : -0.15);
+    g.fillStyle = "#FFFFFF";
+    g.strokeStyle = "#E7D6C2";
+    g.lineWidth = 2;
+    g.fillRect(-12, -4, 24, 9);
+    g.strokeRect(-12, -4, 24, 9);
+    [[-8, -10, 8], [2, -14, 10], [10, -8, 7]].forEach(([x, y, r]) => {
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); g.stroke();
+    });
+    g.restore();
+  }
+
+  function drawArm(g, p, side, cx, bodyY) {
+    const sx = side > 0 ? cx + 6 : cx - 14;
+    const sy = bodyY + (p.slide ? -2 : 8);
+    let dx, dy;
+    if (p.arms === "up")       { dx = side * 8;  dy = -18; }
+    else if (p.arms === "out") { dx = side * 16; dy = -6; }
+    else if (p.arms === "back"){ dx = -16;       dy = -4; }
+    else { dx = Math.sin(p.armA * side) * 14; dy = 10; }
+    g.beginPath();
+    g.moveTo(sx, sy);
+    g.lineTo(sx + dx, sy + dy);
+    g.stroke();
+  }
+
+  function buildSpriteSheet() {
+    const g = sheet.getContext("2d");
+    FRAMES.forEach((name, i) => {
+      g.save();
+      g.translate(i * FW * SPR, 0);
+      g.scale(SPR, SPR);
+      let p;
+      if (name.startsWith("run")) {
+        const ph = (Number(name[3]) / 6) * Math.PI * 2;
+        p = { bodyY: 58 - Math.abs(Math.sin(ph)) * 4, rx: 36, ry: 34,
+              legA: Math.sin(ph) * 0.75, legB: -Math.sin(ph) * 0.75,
+              arms: "swing", armA: Math.sin(ph) * 1.2, face: "normal" };
+      } else if (name === "jump") {
+        p = { bodyY: 54, rx: 34, ry: 36, legA: 1.0, legB: 0.55, arms: "up", face: "happy" };
+      } else if (name === "fall") {
+        p = { bodyY: 56, rx: 37, ry: 33, legA: -0.25, legB: 0.3, arms: "out", face: "normal" };
+      } else if (name.startsWith("slide")) {
+        p = { bodyY: 90 + (name === "slide1" ? 1 : 0), rx: 44, ry: 20,
+              legA: 0, legB: 0, arms: "back", face: "normal", slide: true };
+      } else {
+        p = { bodyY: 58, rx: 36, ry: 34, legA: 0.6, legB: -0.6, arms: "out", face: "hurt" };
+      }
+      drawBun(g, p);
+      g.restore();
+    });
+  }
+
+  // 스프라이트 시트에서 원하는 칸 하나를 잘라서 그리기
+  function drawFrame(g, name, x, y, size) {
+    const i = FRAMES.indexOf(name);
+    g.drawImage(sheet, i * FW * SPR, 0, FW * SPR, FH * SPR, x, y, size, size);
+  }
+
+  // =====================================================
+  // 2. 소리 (간단한 효과음)
+  // =====================================================
+  let audio = null;
+  function beep(freq, dur, type = "square", vol = 0.06, toFreq = null) {
+    try {
+      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+      const o = audio.createOscillator();
+      const gn = audio.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, audio.currentTime);
+      if (toFreq) o.frequency.exponentialRampToValueAtTime(toFreq, audio.currentTime + dur);
+      gn.gain.setValueAtTime(vol, audio.currentTime);
+      gn.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + dur);
+      o.connect(gn).connect(audio.destination);
+      o.start();
+      o.stop(audio.currentTime + dur);
+    } catch (e) {}
+  }
+
+  // =====================================================
+  // 3. 게임 상태
+  // =====================================================
+  const GOAL = 24000;          // 이만큼 달리면 출구 등장
+  const GRAVITY = 2600;
+  const JUMP_V = -900;
+  const DOUBLE_V = -780;
+
+  let state = "ready";         // ready | play | over | clear
+  let player = null;
+  let obstacles = [], stars = [], particles = [], embers = [];
+  let dist = 0, speed = 320, sinceSpawn = 0, nextGap = 500;
+  let starCount = 0, hearts = 3, shake = 0, time = 0;
+  let door = null;
+  let slideHeld = false;
+
+  function resetGame() {
+    player = {
+      x: VW * 0.5, y: groundY, vy: 0,
+      onGround: true, jumps: 0, sliding: false,
+      hurt: 0, anim: 0
+    };
+    obstacles = []; stars = []; particles = [];
+    dist = 0; speed = 320; sinceSpawn = 0; nextGap = 520;
+    starCount = 0; hearts = 3; shake = 0; door = null;
+    updateHud();
+  }
+
+  // =====================================================
+  // 4. 조작: 점프와 슬라이드
+  // =====================================================
+  function jump() {
+    if (state !== "play") return;
+    if (player.onGround || player.jumps < 2) {
+      player.vy = player.jumps === 0 ? JUMP_V : DOUBLE_V;
+      player.jumps++;
+      player.onGround = false;
+      player.sliding = false;
+      beep(player.jumps === 1 ? 520 : 700, 0.15, "square", 0.05, player.jumps === 1 ? 880 : 1100);
+      puff(player.x - 10, groundY, 5);
+    }
+  }
+
+  function setSlide(on) {
+    slideHeld = on;
+    if (state !== "play") return;
+    if (on && !player.sliding) {
+      // 공중에서 누르면 빠르게 내려와요
+      if (!player.onGround) player.vy = Math.max(player.vy, 900);
+      beep(300, 0.12, "triangle", 0.06, 180);
+    }
+  }
+
+  // 버튼 (손가락·마우스 모두)
+  function bindButton(btn, onDown, onUp) {
+    btn.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      btn.setPointerCapture(e.pointerId);
+      btn.classList.add("pressed");
+      onDown();
+    });
+    const up = () => { btn.classList.remove("pressed"); if (onUp) onUp(); };
+    btn.addEventListener("pointerup", up);
+    btn.addEventListener("pointercancel", up);
+    btn.addEventListener("lostpointercapture", up);
+    btn.addEventListener("contextmenu", e => e.preventDefault());
+  }
+  bindButton(document.getElementById("jumpBtn"), jump);
+  bindButton(document.getElementById("slideBtn"), () => setSlide(true), () => setSlide(false));
+
+  // 키보드
+  window.addEventListener("keydown", e => {
+    if (e.repeat) return;
+    if (["Space", "ArrowUp", "KeyW"].includes(e.code)) { e.preventDefault(); jump(); }
+    if (["ArrowDown", "KeyS"].includes(e.code)) { e.preventDefault(); setSlide(true); }
+  });
+  window.addEventListener("keyup", e => {
+    if (["ArrowDown", "KeyS"].includes(e.code)) setSlide(false);
+  });
+
+  // =====================================================
+  // 5. 장애물 · 별 만들기
+  // =====================================================
+  function spawnObstacle() {
+    const r = Math.random();
+    const x = VW + 80;
+    let type = r < 0.4 ? "flame" : r < 0.65 ? "pan" : "pin";
+    if (dist < 1500) type = obstacles.length % 2 === 0 ? "flame" : "pin"; // 처음엔 연습
+    obstacles.push({ type, x, t: Math.random() * 10 });
+
+    // 장애물에 맞춰 별 배치
+    if (type === "pin") {
+      for (let i = 0; i < 4; i++) stars.push({ x: x - 60 + i * 40, y: groundY - 22, got: false });
+    } else {
+      for (let i = 0; i < 5; i++) {
+        const k = i / 4;
+        stars.push({ x: x - 90 + i * 45, y: groundY - 90 - Math.sin(k * Math.PI) * 70, got: false });
+      }
+    }
+  }
+
+  // 각 장애물의 부딪히는 범위
+  function obstacleBox(o) {
+    if (o.type === "flame") return { l: o.x - 16, r: o.x + 16, t: groundY - 46, b: groundY };
+    if (o.type === "pan")   return { l: o.x - 40, r: o.x + 40, t: groundY - 24, b: groundY };
+    return { l: o.x - 52, r: o.x + 52, t: groundY - 92, b: groundY - 56 }; // 밀대
+  }
+
+  function playerBox() {
+    const p = player;
+    if (p.sliding) return { l: p.x - 40, r: p.x + 42, t: p.y - 40, b: p.y };
+    return { l: p.x - 26, r: p.x + 28, t: p.y - 80, b: p.y };
+  }
+
+  const overlap = (a, b) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+
+  // =====================================================
+  // 6. 파티클 (먼지, 반짝이, 불티)
+  // =====================================================
+  function puff(x, y, n) {
+    for (let i = 0; i < n; i++) {
+      particles.push({ x, y, vx: -60 - Math.random() * 80, vy: -Math.random() * 60,
+        life: 0.5, max: 0.5, r: 4 + Math.random() * 4, color: "rgba(255,236,200," });
+    }
+  }
+  function sparkle(x, y) {
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      particles.push({ x, y, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140,
+        life: 0.4, max: 0.4, r: 3, color: "rgba(255,226,110," });
+    }
+  }
+  function initEmbers() {
+    embers = [];
+    for (let i = 0; i < 26; i++) {
+      embers.push({ x: Math.random() * 2000, y: Math.random() * 1200,
+        s: 0.4 + Math.random() * 0.8, r: 1.5 + Math.random() * 2.5, ph: Math.random() * 6 });
+    }
+  }
+
+  // =====================================================
+  // 7. 매 프레임 업데이트
+  // =====================================================
+  function update(dt) {
+    time += dt;
+    const p = player;
+
+    // 불티는 항상 둥실둥실
+    embers.forEach(e => {
+      e.y -= 30 * e.s * dt;
+      e.x -= (state === "play" ? speed * 0.25 : 20) * e.s * dt;
+      if (e.y < -10) e.y = VH + 10;
+      if (e.x < -10) e.x = VW + 10;
+    });
+
+    if (state !== "play") {
+      p.anim += dt * 10;
+      return;
+    }
+
+    // 속도는 점점 빨라져요
+    speed = 320 + 240 * Math.min(1, dist / GOAL);
+    dist += speed * dt;
+    sinceSpawn += speed * dt;
+
+    // 장애물 생성 (출구 근처에서는 멈춤)
+    if (sinceSpawn >= nextGap && dist < GOAL - 900) {
+      spawnObstacle();
+      sinceSpawn = 0;
+      nextGap = speed * (1.15 + Math.random() * 0.8);
+    }
+
+    // 출구 등장
+    if (dist >= GOAL && !door) door = { x: VW + 120 };
+    if (door) {
+      door.x -= speed * dt;
+      if (door.x <= p.x + 10) return finish(true);
+    }
+
+    // 캐릭터 물리
+    p.vy += GRAVITY * dt;
+    p.y += p.vy * dt;
+    if (p.y >= groundY) {
+      if (!p.onGround) puff(p.x - 10, groundY, 4);
+      p.y = groundY; p.vy = 0; p.onGround = true; p.jumps = 0;
+    }
+    p.sliding = slideHeld && p.onGround;
+    p.anim += dt * (p.sliding ? 8 : 14 + speed / 80);
+    if (p.hurt > 0) p.hurt -= dt;
+
+    // 달리는 먼지
+    if (p.onGround && Math.random() < dt * (p.sliding ? 30 : 8)) puff(p.x - 24, groundY, 1);
+
+    // 장애물 이동 + 충돌
+    const pb = playerBox();
+    obstacles.forEach(o => {
+      o.x -= speed * dt;
+      o.t += dt;
+      if (!o.hit && p.hurt <= 0 && overlap(pb, obstacleBox(o))) {
+        o.hit = true;
+        hearts--;
+        p.hurt = 1.3;
+        shake = 0.35;
+        beep(160, 0.3, "sawtooth", 0.07, 70);
+        updateHud();
+        if (hearts <= 0) finish(false);
+      }
+    });
+    obstacles = obstacles.filter(o => o.x > -150);
+
+    // 별 이동 + 줍기
+    stars.forEach(s => {
+      s.x -= speed * dt;
+      if (!s.got && s.x > pb.l - 14 && s.x < pb.r + 14 && s.y > pb.t - 14 && s.y < pb.b + 14) {
+        s.got = true;
+        starCount++;
+        sparkle(s.x, s.y);
+        beep(980 + (starCount % 5) * 60, 0.08, "square", 0.04);
+      }
+    });
+    stars = stars.filter(s => s.x > -40 && !s.got);
+
+    // 파티클
+    particles.forEach(q => {
+      q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 200 * dt; q.life -= dt;
+    });
+    particles = particles.filter(q => q.life > 0);
+
+    if (shake > 0) shake -= dt;
+    updateHud();
+  }
+
+  // =====================================================
+  // 8. 그리기
+  // =====================================================
+  function render() {
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+    if (shake > 0) ctx.translate((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 8);
+
+    const scroll = state === "play" || state === "clear" ? dist : time * 120;
+    drawBackground(scroll);
+    stars.forEach(drawStar);
+    obstacles.forEach(drawObstacle);
+    if (door) drawDoor(door.x);
+    particles.forEach(q => {
+      ctx.fillStyle = q.color + (q.life / q.max) + ")";
+      ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2); ctx.fill();
+    });
+    drawPlayer();
+  }
+
+  function drawBackground(scroll) {
+    // 오븐 안쪽 벽
+    const g = ctx.createLinearGradient(0, 0, 0, groundY);
+    g.addColorStop(0, "#7A3220");
+    g.addColorStop(0.55, "#C8552F");
+    g.addColorStop(1, "#FF9E55");
+    ctx.fillStyle = g;
+    ctx.fillRect(-20, -20, VW + 40, groundY + 20);
+
+    // 벽 패널 (천천히 움직여요)
+    ctx.strokeStyle = "rgba(90,30,15,0.25)";
+    ctx.lineWidth = 3;
+    const panel = 220, off = -(scroll * 0.15) % panel;
+    for (let x = off; x < VW + panel; x += panel) {
+      ctx.beginPath(); ctx.moveTo(x, 90); ctx.lineTo(x, groundY - 10); ctx.stroke();
+      ctx.fillStyle = "rgba(255,210,150,0.25)";
+      ctx.beginPath(); ctx.arc(x + 14, 110, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 14, groundY - 30, 4, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // 뒤쪽 오븐 선반 (철망)
+    const rackY = groundY - 200;
+    const roff = -(scroll * 0.45) % 36;
+    ctx.strokeStyle = "rgba(60,25,15,0.35)";
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(0, rackY); ctx.lineTo(VW, rackY); ctx.stroke();
+    ctx.lineWidth = 2;
+    for (let x = roff; x < VW + 36; x += 36) {
+      ctx.beginPath(); ctx.moveTo(x, rackY - 6); ctx.lineTo(x, rackY + 6); ctx.stroke();
+    }
+
+    // 천장 열선 (빨갛게 반짝)
+    const glow = 0.75 + Math.sin(time * 3) * 0.25;
+    ctx.fillStyle = "#4E1E12";
+    ctx.fillRect(-20, -20, VW + 40, 52);
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,${Math.round(80 + 40 * glow)},40,1)`;
+    ctx.shadowColor = "#FF5A1F";
+    ctx.shadowBlur = 18 * glow;
+    ctx.lineWidth = 7;
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    const zoff = -(scroll * 0.3) % 60;
+    for (let x = zoff - 60, i = 0; x < VW + 60; x += 30, i++) {
+      const y = i % 2 === 0 ? 46 : 64;
+      if (x === zoff - 60) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // 불티
+    embers.forEach(e => {
+      const a = 0.35 + Math.sin(time * 4 + e.ph) * 0.25;
+      ctx.fillStyle = `rgba(255,220,140,${a})`;
+      ctx.beginPath(); ctx.arc(e.x % (VW + 20), e.y % (VH + 20), e.r, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // 바닥 (오븐 철판)
+    ctx.fillStyle = "#3E3A44";
+    ctx.fillRect(-20, groundY, VW + 40, VH - groundY + 20);
+    ctx.fillStyle = "#8B8794";
+    ctx.fillRect(-20, groundY, VW + 40, 6);
+    ctx.fillStyle = "#56525E";
+    const foff = -scroll % 64;
+    for (let x = foff; x < VW + 64; x += 64) {
+      ctx.fillRect(x, groundY + 16, 34, 6);
+      ctx.fillRect(x + 32, groundY + 40, 34, 6);
+    }
+  }
+
+  function drawPlayer() {
+    const p = player;
+    if (p.hurt > 0 && Math.floor(p.hurt * 12) % 2 === 0) return; // 깜빡깜빡
+    let frame;
+    if (state === "over" || (p.hurt > 1.0)) frame = "hurt";
+    else if (p.sliding) frame = "slide" + (Math.floor(p.anim) % 2);
+    else if (!p.onGround) frame = p.vy < 0 ? "jump" : "fall";
+    else frame = "run" + (Math.floor(p.anim) % 6);
+
+    // 그림자
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    const sh = Math.max(0.4, 1 - (groundY - p.y) / 260);
+    ctx.beginPath();
+    ctx.ellipse(p.x, groundY + 3, 30 * sh, 7 * sh, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    drawFrame(ctx, frame, p.x - 60, p.y - 108, 120);
+  }
+
+  function drawObstacle(o) {
+    ctx.save();
+    ctx.translate(o.x, groundY);
+    if (o.type === "flame") {
+      const f = 1 + Math.sin(o.t * 14) * 0.06;
+      ctx.scale(1 / f, f);
+      [["#FF4B2B", 26, 58], ["#FF9A2E", 19, 44], ["#FFE066", 11, 28]].forEach(([c, w, h]) => {
+        ctx.fillStyle = c;
+        ctx.beginPath();
+        ctx.moveTo(0, -h);
+        ctx.bezierCurveTo(w, -h * 0.45, w, 0, 0, 0);
+        ctx.bezierCurveTo(-w, 0, -w, -h * 0.45, 0, -h);
+        ctx.fill();
+      });
+      // 장난꾸러기 눈
+      ctx.fillStyle = "#4A1A0A";
+      ctx.beginPath(); ctx.ellipse(-6, -16, 2.6, 3.4, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(6, -16, 2.6, 3.4, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#4A1A0A"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-10, -23); ctx.lineTo(-3, -20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(10, -23); ctx.lineTo(3, -20); ctx.stroke();
+    } else if (o.type === "pan") {
+      // 뜨거운 프라이팬
+      ctx.fillStyle = "#2E2A33";
+      ctx.fillRect(34, -20, 40, 8);
+      ctx.beginPath(); ctx.ellipse(0, -14, 44, 14, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#FF6A3A";
+      ctx.beginPath(); ctx.ellipse(0, -18, 34, 8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#FFB15C";
+      ctx.beginPath(); ctx.ellipse(-8, -19, 14, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+      // 김
+      ctx.strokeStyle = "rgba(255,240,220,0.7)"; ctx.lineWidth = 3; ctx.lineCap = "round";
+      for (let i = -1; i <= 1; i++) {
+        const w = Math.sin(o.t * 5 + i) * 4;
+        ctx.beginPath();
+        ctx.moveTo(i * 16, -30);
+        ctx.quadraticCurveTo(i * 16 + 8 + w, -40, i * 16 + w, -50);
+        ctx.stroke();
+      }
+    } else {
+      // 매달린 밀대
+      const swing = Math.sin(o.t * 3) * 3;
+      ctx.translate(swing, 0);
+      ctx.strokeStyle = "#9A9AA6"; ctx.lineWidth = 3;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(-30, -92); ctx.lineTo(-30, -groundY + 52); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(30, -92);  ctx.lineTo(30, -groundY + 52);  ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#8A5530";
+      roundRect(ctx, -62, -80, 16, 12, 5); ctx.fill();
+      roundRect(ctx, 46, -80, 16, 12, 5); ctx.fill();
+      const wood = ctx.createLinearGradient(0, -92, 0, -56);
+      wood.addColorStop(0, "#F3C48A"); wood.addColorStop(1, "#C98B4F");
+      ctx.fillStyle = wood;
+      roundRect(ctx, -48, -92, 96, 36, 14); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.35)";
+      roundRect(ctx, -40, -88, 80, 6, 3); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawStar(s) {
+    ctx.save();
+    ctx.translate(s.x, s.y + Math.sin(time * 5 + s.x * 0.05) * 3);
+    ctx.rotate(Math.sin(time * 2 + s.x) * 0.3);
+    ctx.fillStyle = "#FFE45C";
+    ctx.strokeStyle = "#E89A1C";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 === 0 ? 12 : 5.5;
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawDoor(x) {
+    const top = groundY - 230;
+    ctx.fillStyle = "#2E2A33";
+    roundRect(ctx, x - 70, top, 140, 230, 18); ctx.fill();
+    const sky = ctx.createLinearGradient(0, top, 0, groundY);
+    sky.addColorStop(0, "#8FD8FF"); sky.addColorStop(1, "#D9F4FF");
+    ctx.fillStyle = sky;
+    roundRect(ctx, x - 54, top + 16, 108, 200, 12); ctx.fill();
+    // 바깥 풍경 (구름, 풀밭)
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath(); ctx.arc(x - 18, top + 60, 14, 0, Math.PI * 2); ctx.arc(x, top + 54, 18, 0, Math.PI * 2); ctx.arc(x + 18, top + 62, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#7BCF6A";
+    roundRect(ctx, x - 54, groundY - 40, 108, 24, 0); ctx.fill();
+    ctx.fillStyle = "#FFD36E";
+    roundRect(ctx, x - 40, top - 40, 80, 32, 10); ctx.fill();
+    ctx.fillStyle = "#4A2617";
+    ctx.font = "22px Jua, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("출구", x, top - 23);
+  }
+
+  function roundRect(g, x, y, w, h, r) {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+  }
+
+  // =====================================================
+  // 9. 화면 정보 · 시작 · 끝
+  // =====================================================
+  const heartsEl = document.getElementById("hearts");
+  const scoreEl = document.getElementById("score");
+  const fillEl = document.getElementById("progressFill");
+  const bunEl = document.getElementById("progressBun");
+
+  function getScore() { return Math.floor(dist / 20) + starCount * 20; }
+
+  function updateHud() {
+    heartsEl.textContent = "❤️".repeat(Math.max(0, hearts)) + "🤍".repeat(3 - Math.max(0, hearts));
+    scoreEl.textContent = getScore() + "점";
+    const pct = Math.min(100, (dist / GOAL) * 100);
+    fillEl.style.width = pct + "%";
+    bunEl.style.left = pct + "%";
+  }
+
+  const startScreen = document.getElementById("startScreen");
+  const endScreen = document.getElementById("endScreen");
+
+  function startGame() {
+    resetGame();
+    state = "play";
+    startScreen.hidden = true;
+    endScreen.hidden = true;
+    beep(660, 0.1, "square", 0.05);
+    setTimeout(() => beep(990, 0.15, "square", 0.05), 110);
+  }
+
+  function finish(win) {
+    state = win ? "clear" : "over";
+    document.getElementById("endTitle").textContent = win ? "오븐 탈출 성공!" : "앗, 너무 뜨거워!";
+    document.getElementById("endSub").textContent = win
+      ? `설탕별 ${starCount}개를 모아서 빠져나왔어요`
+      : "조금만 더 하면 출구야, 다시 해 보자!";
+    document.getElementById("endScore").textContent = getScore();
+    if (win) [660, 880, 1100, 1320].forEach((f, i) => setTimeout(() => beep(f, 0.18, "square", 0.05), i * 120));
+    setTimeout(() => {
+      endScreen.hidden = false;
+      document.getElementById("retryBtn").focus();
+    }, 500);
+  }
+
+  document.getElementById("startBtn").addEventListener("click", startGame);
+  document.getElementById("retryBtn").addEventListener("click", startGame);
+
+  // 시작 화면의 캐릭터 미리보기 (달리는 모습)
+  const pv = document.getElementById("preview").getContext("2d");
+  function drawPreview() {
+    pv.clearRect(0, 0, 240, 240);
+    drawFrame(pv, "run" + (Math.floor(time * 12) % 6), 0, 0, 240);
+  }
+
+  // =====================================================
+  // 10. 게임 루프
+  // =====================================================
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.033, (now - last) / 1000);
+    last = now;
+    update(dt);
+    render();
+    if (!startScreen.hidden) drawPreview();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+  buildSpriteSheet();
+  resetGame();
+  initEmbers();
+  // 글꼴이 준비되면 스프라이트를 다시 그려도 되지만, 캐릭터는 글자가 없어서 바로 시작!
+  requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

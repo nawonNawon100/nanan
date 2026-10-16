@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>document.documentElement.classList.add("js")</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>적극행정 신호등 | 대표 프로젝트</title>
+<meta name="description" content="신입 주무관이 민원 안내 전 3가지를 점검하면, 지금 안내해도 되는지 신호등으로 보여주는 웹앱 — 사용자 인터뷰부터 화면 설계까지의 기획 과정">
+<meta property="og:title" content="적극행정 신호등 | 대표 프로젝트">
+<meta property="og:description" content="신입 주무관의 '틀리면 어쩌나'를 '자신 있게 안내'로 바꾸는 3초 점검 웹앱">
+<meta property="og:image" content="../images/og.jpg">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="project.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      적극행정 신호등
+    </a>
+    <nav class="site-nav" aria-label="프로젝트 메뉴">
+      <a href="index.html" aria-current="page">소개</a>
+      <a href="app.html">앱 써보기</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- 한 줄 소개 -->
+  <section class="p-hero">
+    <div class="container p-hero-grid">
+      <div class="p-hero-text">
+        <p class="eyebrow">대표 프로젝트 · 웹·서비스 기획</p>
+        <h1>적극행정 신호등</h1>
+        <p class="lead">신입 주무관이 민원 안내 전에 3가지를 점검하면, 지금 안내해도 되는지 <strong>큰 신호등</strong>과 <strong>다음 행동</strong>으로 한눈에 보여주는 웹앱이에요.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="app.html">직접 써보기</a>
+          <a class="btn btn-secondary" href="#process">만든 과정 보기</a>
+        </div>
+      </div>
+      <div class="p-hero-visual" aria-hidden="true">
+        <div class="mini-signal" data-signal="green">
+          <div class="lights"><span class="light red"></span><span class="light yellow"></span><span class="light green"></span></div>
+          <p class="mini-label">초록불 · 바로 안내해도 좋아요</p>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <dl class="p-meta">
+        <div><dt>역할</dt><dd>기획 · 화면 설계 · 개발(Claude Code와 함께)</dd></div>
+        <div><dt>사용자</dt><dd>주민센터 민원 창구 신입 주무관</dd></div>
+        <div><dt>만든 것</dt><dd>HTML · CSS · JavaScript 웹앱</dd></div>
+        <div><dt>증명한 역량</dt><dd>화면 설계(UI) · 사용자 경험(UX) 설계</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- 해결한 문제 -->
+  <section class="p-section" aria-labelledby="problem-title">
+    <div class="container">
+      <p class="p-kicker">01 · 해결한 문제</p>
+      <h2 id="problem-title">알면서도 "그냥 하던 대로"</h2>
+      <div class="problem-grid">
+        <div class="reveal">
+          <p class="p-body">가상 사용자 <strong>한도윤(3개월 차 신입 주무관)</strong>을 인터뷰했어요. 도윤 씨는 적극행정이 무엇인지 알고 있었지만, 틀릴까 봐 불안하고 선배에게 계속 묻기는 눈치가 보여서 결국 하던 대로 일하고 있었어요.</p>
+          <blockquote class="quote">
+            "신입이 '적극적으로' 하다가 틀리면 어쩌나 싶어서… 그냥 하던 대로 하게 되더라고요"
+            <cite>— 가상 인터뷰, 한도윤</cite>
+          </blockquote>
+        </div>
+        <div class="card pov reveal">
+          <p class="pov-label">어떻게 하면 (HMW)</p>
+          <p class="pov-text">어떻게 하면 도윤 씨가 민원 응대 중 <strong>최신 안내를 한눈에 확인</strong>해서, 틀릴 걱정 없이 <strong>적극행정</strong>을 할 수 있을까?</p>
+          <p class="pov-note">전공(행정학) 연결 — 일선관료가 불확실성 속에서 만든 비공식 루틴("하던 대로", 개인 메모)을 <strong>절차에 맞는 점검 루틴</strong>으로 바꾸는 것이 목표였어요.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 주요 기능 3가지 -->
+  <section class="p-section p-alt" aria-labelledby="features-title">
+    <div class="container">
+      <p class="p-kicker">02 · 주요 기능</p>
+      <h2 id="features-title">3번 누르고, 한눈에 판단</h2>
+      <div class="feature-grid">
+        <article class="card feature reveal">
+          <div class="shot" role="img" aria-label="민원 상황 기록 화면 사진 자리">사진을 넣어주세요<br><small>images/project-1.png</small></div>
+          <div class="feature-body">
+            <h3>민원 상황 기록</h3>
+            <p>날짜·유형·민원 내용·관련 법령을 적어요. 유형 카드를 누르면 유형이 자동으로 골라지고, 민원인 정보는 <strong>연습용 안내</strong>와 함께 목록에서 <strong>가려서</strong> 보여요.</p>
+          </div>
+        </article>
+        <article class="card feature reveal">
+          <div class="shot" role="img" aria-label="자가 점검과 신호등 결과 화면 사진 자리">사진을 넣어주세요<br><small>images/project-2.png</small></div>
+          <div class="feature-body">
+            <h3>3가지 자가 점검 → 큰 신호등</h3>
+            <p>근거 규정 · 최신 여부 · 선례를 "예/아니오"로 답하면, 예 개수에 따라 <strong>초록 · 노랑 · 빨강</strong> 신호등이 화면 가득 켜져요.</p>
+          </div>
+        </article>
+        <article class="card feature reveal">
+          <div class="shot" role="img" aria-label="다음 행동과 기록 목록 화면 사진 자리">사진을 넣어주세요<br><small>images/project-3.png</small></div>
+          <div class="feature-body">
+            <h3>다음 행동 + 다시 보기</h3>
+            <p>노란불이면 선배에게 물어볼 문장을, 빨간불이면 국가법령정보센터·법제처 링크를 보여줘요. 저장한 기록은 새로고침해도 남고 목록에서 다시 볼 수 있어요.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 만든 과정 -->
+  <section class="p-section" id="process" aria-labelledby="process-title">
+    <div class="container">
+      <p class="p-kicker">03 · 만든 과정</p>
+      <h2 id="process-title">디자인씽킹으로 기획하고, 단계별로 만들었어요</h2>
+      <ol class="timeline">
+        <li class="reveal">
+          <h3>직무에서 출발</h3>
+          <p>희망 직무를 <strong>웹·서비스 기획자</strong>로 정하고, 증명할 역량으로 화면 설계(UI)와 사용자 경험(UX) 설계를 골랐어요.</p>
+        </li>
+        <li class="reveal">
+          <h3>가상 사용자 인터뷰 → 공감지도</h3>
+          <p>AI가 연기한 신입 주무관에게 질문 5개를 하고, 말·생각·행동·느낌을 정리했어요. "뭐가 최신인지 몰라서 몇 개를 다 열어 봐요"가 핵심 불편이었어요.</p>
+        </li>
+        <li class="reveal">
+          <h3>문제 정의 + AI 검수</h3>
+          <p>관점 문장(POV)과 HMW를 만들고 7가지 기준으로 검수했어요. <strong>"적극행정"</strong>을 핵심 키워드로 넣어 한 번 보완했어요.</p>
+        </li>
+        <li class="reveal">
+          <h3>아이디어 5개 중 선택</h3>
+          <p>카드 보드, SOP 노트, 창구 모드 등 5개 중 <strong>적극행정 신호등</strong>을 골랐어요. 신입이 혼자서 절차에 맞게 판단할 수 있기 때문이에요.</p>
+        </li>
+        <li class="reveal">
+          <h3>기능을 고르며 내린 결정</h3>
+          <ul class="decisions">
+            <li><strong>입력은 글쓰기로</strong> — 구체적인 상황을 파악해야 판단할 수 있어서</li>
+            <li><strong>창구 모드 대신 유형 카드</strong> — 이 앱은 민원인이 아닌 공무원용이라서</li>
+            <li><strong>민원인 정보는 연습용 + 가림</strong> — 개인정보는 최소로, 화면에서는 가려서</li>
+            <li><strong>법령 검색은 링크로</strong> — 화면(UI)에 집중하기 위해</li>
+          </ul>
+        </li>
+        <li class="reveal">
+          <h3>PRD → 7단계 개발 → 검수</h3>
+          <p>PRD(개발 설계서)를 쓰고, 화면 뼈대 → 샘플 데이터 → 점검 → 결과 → 저장 순서로 만들었어요. 신호등 색과 문구가 어긋난 문제를 직접 찾아 고쳤어요.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 검증과 배운 점 -->
+  <section class="p-section p-alt" aria-labelledby="learn-title">
+    <div class="container">
+      <p class="p-kicker">04 · 검증과 배운 점</p>
+      <h2 id="learn-title">확인한 것, 배운 것</h2>
+      <div class="learn-grid">
+        <div class="card learn reveal">
+          <h3>검증 결과</h3>
+          <p class="learn-goal">성공 기준: 짝이 도움 없이 2분 안에 "기록 → 점검 → 결과 → 저장 → 다시 찾기"를 끝낸다.</p>
+          <ul>
+            <li>자체 검수: 전체 흐름 · 새로고침 후 유지 · 폰 화면 · 글자 대비 통과</li>
+            <li>짝 테스트: [여기에 입력]</li>
+            <li>짝이 한 말 · 고친 것: [여기에 입력]</li>
+          </ul>
+        </div>
+        <div class="card learn reveal">
+          <h3>배운 점</h3>
+          <p>[여기에 입력]</p>
+        </div>
+      </div>
+      <p class="competency reveal">이 프로젝트는 <strong>화면 설계(UI)</strong> 역량을 한눈에 보이는 큰 신호등 결과 화면과 개인정보 가림 설계로, <strong>사용자 경험(UX) 설계</strong> 역량을 가상 인터뷰 → 공감지도 → 적극행정 문제 정의 → 짝 테스트 후 개선 과정으로 증명합니다.</p>
+    </div>
+  </section>
+
+  <!-- 직접 써보기 -->
+  <section class="p-cta">
+    <div class="container">
+      <h2>안내하기 전, 3초만 점검해 보세요</h2>
+      <a class="btn btn-primary" href="app.html">직접 써보기</a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <span>[여기에 입력: 이름] · [여기에 입력: 이메일] · 2026</span>
+    <span>Made with Claude Code</span>
+  </div>
+</footer>
+
+<script src="../js/reveal.js"></script>
+</body>
+</html>
